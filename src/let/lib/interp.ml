@@ -54,7 +54,31 @@ let rec eval_expr : expr -> exp_val ea_result =
     string_of_env >>= fun str ->
     print_endline str; 
     error "Debug called"
-  | _ -> failwith "Not implemented yet!"
+  | Cons(e1, e2) ->
+    eval_expr e1 >>= fun v1 ->
+    eval_expr e2 >>= fun v2 ->
+    (match v2 with
+    | ListVal lst -> return (ListVal (v1 :: lst))
+    | _ -> error "Expected a list") 
+  | Hd(e) ->
+    eval_expr e >>= fun v ->
+    (match v with
+    | ListVal [] -> error "Empty list"
+    | ListVal (x :: _) -> return x
+    | _ -> error "Expected a list")
+  | Tl(e) ->
+    eval_expr e >>= fun v ->
+    (match v with
+    | ListVal [] -> error "Empty list"
+    | ListVal (_ :: xs) -> return (ListVal xs)
+    | _ -> error "Expected a list")
+  | IsEmpty(e) ->
+    eval_expr e >>= fun v ->
+    (match v with
+    | ListVal lst -> return (BoolVal (lst = []))
+    | _ -> error "Expected a list")
+  | EmptyList(_t) ->
+    return (ListVal [])
 
 (** [eval_prog e] evaluates program [e] *)
 let eval_prog (AProg(_,e)) =
